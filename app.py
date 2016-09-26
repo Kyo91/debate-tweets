@@ -65,7 +65,7 @@ class MyStreamListener(tweepy.StreamListener):
         if status.coordinates and status.coordinates:
             longitude = status.coordinates["coordinates"][0]
             latitude = status.coordinates["coordinates"][1]
-            print('latitude: {}, longitude: {}'.format(latitude, longitude))
+            # print('latitude: {}, longitude: {}'.format(latitude, longitude))
         else:
             longitude = None
             latitude = None
@@ -77,7 +77,7 @@ class MyStreamListener(tweepy.StreamListener):
         VALUES (?,?,?,?,?)''', (longitude,latitude,status.created_at,country,status.text))
         self.conn.commit()
 
-def main():
+def main(db):
 
     with open('keys.json') as k:
         secrets = json.load(k)
@@ -86,15 +86,9 @@ def main():
     auth.set_access_token(secrets['access_key'], secrets['access_secret'])
     api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-    streamThread = StreamThread(MyStreamListener, 'candidates.db', api)
+    streamThread = StreamThread(MyStreamListener, db, api)
     streamThread.run(['hillary', 'clinton', 'donald', 'trump', 'debate', 'shillary', 'drumpf'])
 
 if __name__ == '__main__':
-    main()
-    while True:
-        time.sleep(60)
-        # Need to create a new cursor here
-        cursor = myStream.conn.cursor()
-        cursor.execute('SELECT COUNT(*) FROM tweet')
-        print('{} Total tweets collected: {}'.format(datetime.datetime.now(),
-                                                     myStream.cursor.fetchone()))
+    db = 'candidates.db'
+    main(db)
